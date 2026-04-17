@@ -8,40 +8,83 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 //go:embed cv-banned.csv
 var csvData []byte
 
-// messages stores simple integeration bindings for i18n translations
+var (
+	bwFlag bool
+)
+
+// ANSI colors
+var (
+	Reset  = "\033[0m"
+	Red    = "\033[31;1m" // bold red
+	Green  = "\033[32;1m"
+	Yellow = "\033[33m"
+	Cyan   = "\033[36m"
+	Bold   = "\033[1m"
+)
+
+// Symbols
+var (
+	SymDetect = "🚨"
+	SymBranch = " ├─"
+	SymEnd    = " └─"
+	SymCheck  = "✅"
+	SymWarn   = "⚠️"
+	SymCross  = "❌"
+)
+
+// setBW disables colors and UTF8 characters if --bw flag is used
+func setBW() {
+	SymDetect = "[!]"
+	SymBranch = " |-"
+	SymEnd = " `-"
+	SymCheck = "[OK]"
+	SymWarn = "[WARN]"
+	SymCross = "[X]"
+
+	Reset = ""
+	Red = ""
+	Green = ""
+	Yellow = ""
+	Cyan = ""
+	Bold = ""
+}
+
 var messages = map[string]map[string]string{
 	"en": {
-		"usage":         "Usage: %s <directory-path>\n",
-		"dir_not_exist": "Error: Target directory does not exist: %s\n",
-		"csv_error":     "Error: Failed to parse embedded CSV: %v\n",
-		"walk_warn":     "Warning: Access denied to %s: %v\n",
-		"detected":      "[DETECTED] %s\n",
-		"slug":          " ├─ matched slug: %s\n",
-		"source":        " └─ blacklist source: %s\n",
-		"walk_error":    "Error during filesystem scanning: %v\n",
-		"found":         "\nScan completed. Found %d banned plugin(s).\n",
-		"not_found":     "Scan completed successfully. No banned plugins found.\n",
+		"use":           "wpvul <directory-path>",
+		"desc":          "wpvul is a lightning-fast zero-dependency WordPress plugin scanner.",
+		"dir_not_exist": "%s Error: Target directory does not exist: %s\n",
+		"csv_error":     "%s Error: Failed to parse embedded CSV: %v\n",
+		"walk_warn":     "%s Warning: Access denied to %s: %v\n",
+		"detected":      "%s %s[DETECTED]%s %s%s%s\n",
+		"slug":          "%s matched slug: %s%s%s\n",
+		"source":        "%s blacklist source: %s%s%s\n",
+		"walk_error":    "%s Error during filesystem scanning: %v\n",
+		"found":         "\n%s Scan completed. Found %s%d%s banned plugin(s).\n",
+		"not_found":     "\n%s Scan completed successfully. No banned plugins found.\n",
 	},
 	"pl": {
-		"usage":         "Użycie: %s <ścieżka-do-katalogu>\n",
-		"dir_not_exist": "Błąd: Podany katalog docelowy nie istnieje: %s\n",
-		"csv_error":     "Błąd podczas parsowania wbudowanego pliku CSV: %v\n",
-		"walk_warn":     "Ostrzeżenie - brak dostępu do %s: %v\n",
-		"detected":      "[WYKRYTO] %s\n",
-		"slug":          " ├─ Slug (dopasowanie): %s\n",
-		"source":        " └─ Źródło blacklisty: %s\n",
-		"walk_error":    "Błąd z systemem plików podczas skanowania: %v\n",
-		"found":         "\nSkanowanie zakończone. Znaleziono %d wystąpień zbanowanych pluginów.\n",
-		"not_found":     "Skanowanie zakończone pomyślnie. Nie znaleziono zbanowanych pluginów w podanym folderze.\n",
+		"use":           "wpvul <ścieżka-do-katalogu>",
+		"desc":          "wpvul to ekstremalnie szybki skaner podatnych pluginów WordPressa.",
+		"dir_not_exist": "%s Błąd: Podany katalog docelowy nie istnieje: %s\n",
+		"csv_error":     "%s Błąd podczas parsowania wbudowanego pliku CSV: %v\n",
+		"walk_warn":     "%s Ostrzeżenie - brak dostępu do %s: %v\n",
+		"detected":      "%s %s[WYKRYTO]%s %s%s%s\n",
+		"slug":          "%s dopasowanie (slug): %s%s%s\n",
+		"source":        "%s źródło blacklisty: %s%s%s\n",
+		"walk_error":    "%s Błąd z systemem plików podczas skanowania: %v\n",
+		"found":         "\n%s Skanowanie zakończone. Znaleziono %s%d%s wystąpień zbanowanych pluginów.\n",
+		"not_found":     "\n%s Skanowanie zakończone pomyślnie. Nie znaleziono zbanowanych pluginów.\n",
 	},
 }
 
-// getLang determines the current lang by checking environmental variables
 func getLang() string {
 	lang := os.Getenv("LANG")
 	if strings.HasPrefix(lang, "pl") {
@@ -50,7 +93,6 @@ func getLang() string {
 	return "en"
 }
 
-// msg fetches a translated string based on the current locale
 func msg(key string) string {
 	lang := getLang()
 	if val, ok := messages[lang][key]; ok {
@@ -62,39 +104,52 @@ func msg(key string) string {
 	return key
 }
 
-const Version = "1.0.0"
+const Version = "1.0.1"
 
-func main() {
-	if len(os.Args) >= 2 {
-		if os.Args[1] == "--version" || os.Args[1] == "-v" {
-			fmt.Printf("wpvul version %s\n", Version)
-			os.Exit(0)
-		}
+func Execute() {
+	var rootCmd = &cobra.Command{
+		Use:     msg("use"),
+		Short:   msg("desc"),
+		Version: Version,
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if bwFlag {
+				setBW()
+			}
+			runScan(args[0])
+		},
 	}
 
-	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, msg("usage"), filepath.Base(os.Args[0]))
+	// Flag definition
+	rootCmd.Flags().BoolVar(&bwFlag, "bw", false, "Disable colors and UTF-8 symbols (ASCII mode)")
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
 
-	targetDir := os.Args[1]
+func main() {
+	Execute()
+}
 
+func runScan(targetDir string) {
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, msg("dir_not_exist"), targetDir)
+		fmt.Fprintf(os.Stderr, msg("dir_not_exist"), SymCross, targetDir)
 		os.Exit(1)
 	}
 
 	reader := csv.NewReader(bytes.NewReader(csvData))
 	records, err := reader.ReadAll()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, msg("csv_error"), err)
+		fmt.Fprintf(os.Stderr, msg("csv_error"), SymCross, err)
 		os.Exit(1)
 	}
 
 	bannedPlugins := make(map[string]string)
 	for i, record := range records {
 		if i == 0 {
-			continue
+			continue // Pomiń nagłówek
 		}
 		if len(record) >= 4 {
 			slug := record[0]
@@ -107,22 +162,30 @@ func main() {
 
 	err = filepath.WalkDir(targetDir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
-			fmt.Fprintf(os.Stderr, msg("walk_warn"), path, err)
+			fmt.Fprintf(os.Stderr, msg("walk_warn"), SymWarn, path, err)
 			return nil
 		}
 
 		name := d.Name()
+		absDir, _ := filepath.Abs(filepath.Dir(path))
+		parentName := filepath.Base(absDir)
+		isRoot := path == targetDir || path == "."
+
 		matchedSlug, isBanned := matchSlug(name, d.IsDir(), bannedPlugins)
 
 		if isBanned {
 			source := bannedPlugins[matchedSlug]
-			fmt.Printf(msg("detected"), path)
-			fmt.Printf(msg("slug"), matchedSlug)
-			fmt.Printf(msg("source"), source)
+			fmt.Printf(msg("detected"), SymDetect, Red, Reset, Bold, path, Reset)
+			fmt.Printf(msg("slug"), SymBranch, Yellow, matchedSlug, Reset)
+			fmt.Printf(msg("source"), SymEnd, Cyan, source, Reset)
 			foundCount++
 
-			if d.IsDir() {
-				// Don't dive deeply into the directory to prevent duplication
+			if d.IsDir() && !isRoot {
+				return filepath.SkipDir
+			}
+		} else {
+			// Submodules false-positives prevention logic
+			if d.IsDir() && !isRoot && (parentName == "plugins" || parentName == "mu-plugins") {
 				return filepath.SkipDir
 			}
 		}
@@ -131,25 +194,23 @@ func main() {
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, msg("walk_error"), err)
+		fmt.Fprintf(os.Stderr, msg("walk_error"), SymCross, err)
 		os.Exit(1)
 	}
 
 	if foundCount > 0 {
-		fmt.Printf(msg("found"), foundCount)
+		fmt.Printf(msg("found"), SymDetect, Red, foundCount, Reset)
 		os.Exit(1)
 	} else {
-		fmt.Print(msg("not_found"))
+		fmt.Printf(msg("not_found"), SymCheck)
 	}
 }
 
 func matchSlug(name string, isDir bool, banned map[string]string) (string, bool) {
-	// 1. Exact match
 	if _, ok := banned[name]; ok {
 		return name, true
 	}
 
-	// 2. Ext trimming for zip/tar/php payload patterns
 	if !isDir {
 		if strings.HasSuffix(name, ".php") {
 			slug := strings.TrimSuffix(name, ".php")
