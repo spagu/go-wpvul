@@ -16,7 +16,8 @@ import (
 var csvData []byte
 
 var (
-	bwFlag bool
+	bwFlag      bool
+	excludeDirs []string
 )
 
 // ANSI colors
@@ -122,6 +123,7 @@ func Execute() {
 
 	// Flag definition
 	rootCmd.Flags().BoolVar(&bwFlag, "bw", false, "Disable colors and UTF-8 symbols (ASCII mode)")
+	rootCmd.Flags().StringSliceVarP(&excludeDirs, "exclude", "e", []string{}, "Comma separated list of directories to exclude (e.g. dev.hide, backups)")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -164,6 +166,14 @@ func runScan(targetDir string) {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, msg("walk_warn"), SymWarn, path, err)
 			return nil
+		}
+
+		if d.IsDir() {
+			for _, excl := range excludeDirs {
+				if d.Name() == strings.TrimSpace(excl) {
+					return filepath.SkipDir
+				}
+			}
 		}
 
 		name := d.Name()

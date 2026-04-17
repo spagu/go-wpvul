@@ -63,6 +63,12 @@ Execute `wpvul` by passing the absolute or relative directory you want to scan:
 # General Usage
 wpvul /var/www/html/wp-content/plugins
 
+# Scan but exclude specific development/testing directories
+wpvul --exclude dev.hid --exclude backups /var/www/html/wp-content
+
+# Alternatively, run without fancy shell colors/UTF-8 symbols:
+wpvul --bw /var/www/html/wp-content
+
 # Example Output
 # [DETECTED] /var/www/html/wp-content/plugins/bad-behavior
 #  ├─ matched slug: bad-behavior
