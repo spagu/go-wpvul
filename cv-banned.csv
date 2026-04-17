@@ -195,3 +195,10 @@ bwp-google-xml-sitemaps,Better WordPress Google XML Sitemaps,Performance,Sircon
 jetpack,Jetpack for WordPress,Performance,Sircon
 kstats-reloaded,kStats Reloaded,Stats,Sircon
 wordfence,Wordfence Security,Security,Sircon
+query-monitor,Query Monitor,Performance,"Pantheon; Kinsta"
+bwp-minify,Better WordPress Minify,Performance,Pantheon
+wp-clone-by-wp-academy,WP Clone by WP Academy,Backups,Kinsta
+litespeed-cache,LiteSpeed Cache,Caching,Kinsta
+jch-optimize,JCH Optimize,Performance,Kinsta
+aam,Advanced Access Manager,Security,Kinsta
+all-in-one-wp-migration,All-in-One WP Migration,Backups,Pantheon
