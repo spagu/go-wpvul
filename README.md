@@ -66,12 +66,19 @@ wpvul /var/www/html/wp-content/plugins
 # Scan but exclude specific development/testing directories
 wpvul --exclude dev.hid --exclude backups /var/www/html/wp-content
 
+# Strict filter by Source Matrix (e.g., only detect GoDaddy or User List issues)
+wpvul --source "GoDaddy" --source "User list" /var/www/html
+
+# Strict filter by Category (e.g., only search for Caching and Backups)
+wpvul -c "Caching" -c "Security" /var/www/html
+
 # Alternatively, run without fancy shell colors/UTF-8 symbols:
 wpvul --bw /var/www/html/wp-content
 
 # Example Output
-# [DETECTED] /var/www/html/wp-content/plugins/bad-behavior
+# 🚨 [DETECTED] /var/www/html/wp-content/plugins/bad-behavior
 #  ├─ matched slug: bad-behavior
+#  ├─ plugin category: Performance
 #  └─ blacklist source: User list
 ```
 

@@ -18,16 +18,25 @@ var csvData []byte
 var (
 	bwFlag      bool
 	excludeDirs []string
+	categories  []string
+	sources     []string
 )
+
+type PluginData struct {
+	Slug     string
+	Category string
+	Source   string
+}
 
 // ANSI colors
 var (
-	Reset  = "\033[0m"
-	Red    = "\033[31;1m" // bold red
-	Green  = "\033[32;1m"
-	Yellow = "\033[33m"
-	Cyan   = "\033[36m"
-	Bold   = "\033[1m"
+	Reset   = "\033[0m"
+	Red     = "\033[31;1m" // bold red
+	Green   = "\033[32;1m"
+	Yellow  = "\033[33m"
+	Cyan    = "\033[36m"
+	Magenta = "\033[35m"
+	Bold    = "\033[1m"
 )
 
 // Symbols
@@ -54,6 +63,7 @@ func setBW() {
 	Green = ""
 	Yellow = ""
 	Cyan = ""
+	Magenta = ""
 	Bold = ""
 }
 
@@ -66,10 +76,11 @@ var messages = map[string]map[string]string{
 		"walk_warn":     "%s Warning: Access denied to %s: %v\n",
 		"detected":      "%s %s[DETECTED]%s %s%s%s\n",
 		"slug":          "%s matched slug: %s%s%s\n",
+		"category":      "%s plugin category: %s%s%s\n",
 		"source":        "%s blacklist source: %s%s%s\n",
 		"walk_error":    "%s Error during filesystem scanning: %v\n",
-		"found":         "\n%s Scan completed. Found %s%d%s banned plugin(s).\n",
-		"not_found":     "\n%s Scan completed successfully. No banned plugins found.\n",
+		"found":         "\n%s Scan completed. Found %s%d%s banned plugin(s)%s.\n",
+		"not_found":     "\n%s Scan completed successfully. No banned plugins found%s.\n",
 	},
 	"pl": {
 		"use":           "wpvul <ścieżka-do-katalogu>",
@@ -79,10 +90,11 @@ var messages = map[string]map[string]string{
 		"walk_warn":     "%s Ostrzeżenie - brak dostępu do %s: %v\n",
 		"detected":      "%s %s[WYKRYTO]%s %s%s%s\n",
 		"slug":          "%s dopasowanie (slug): %s%s%s\n",
+		"category":      "%s kategoria wg listy: %s%s%s\n",
 		"source":        "%s źródło blacklisty: %s%s%s\n",
 		"walk_error":    "%s Błąd z systemem plików podczas skanowania: %v\n",
-		"found":         "\n%s Skanowanie zakończone. Znaleziono %s%d%s wystąpień zbanowanych pluginów.\n",
-		"not_found":     "\n%s Skanowanie zakończone pomyślnie. Nie znaleziono zbanowanych pluginów.\n",
+		"found":         "\n%s Skanowanie zakończone. Znaleziono %s%d%s wystąpień zbanowanych pluginów%s.\n",
+		"not_found":     "\n%s Skanowanie zakończone pomyślnie. Nie znaleziono zbanowanych pluginów%s.\n",
 	},
 }
 
@@ -124,6 +136,8 @@ func Execute() {
 	// Flag definition
 	rootCmd.Flags().BoolVar(&bwFlag, "bw", false, "Disable colors and UTF-8 symbols (ASCII mode)")
 	rootCmd.Flags().StringSliceVarP(&excludeDirs, "exclude", "e", []string{}, "Comma separated list of directories to exclude (e.g. dev.hide, backups)")
+	rootCmd.Flags().StringSliceVarP(&categories, "category", "c", []string{}, "Comma separated list to filter by categories (e.g. Caching, Security)")
+	rootCmd.Flags().StringSliceVarP(&sources, "source", "s", []string{}, "Comma separated list to filter by blacklist source (e.g. GoDaddy, Kinsta)")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -133,6 +147,19 @@ func Execute() {
 
 func main() {
 	Execute()
+}
+
+func matchesFilter(field string, filters []string) bool {
+	if len(filters) == 0 {
+		return true // No filter applied, passes automatically
+	}
+	fieldLower := strings.ToLower(field)
+	for _, f := range filters {
+		if strings.Contains(fieldLower, strings.ToLower(strings.TrimSpace(f))) {
+			return true
+		}
+	}
+	return false
 }
 
 func runScan(targetDir string) {
@@ -148,15 +175,18 @@ func runScan(targetDir string) {
 		os.Exit(1)
 	}
 
-	bannedPlugins := make(map[string]string)
+	bannedPlugins := make(map[string]PluginData)
 	for i, record := range records {
 		if i == 0 {
 			continue // Pomiń nagłówek
 		}
 		if len(record) >= 4 {
 			slug := record[0]
-			source := record[3]
-			bannedPlugins[slug] = source
+			bannedPlugins[slug] = PluginData{
+				Slug:     slug,
+				Category: record[2],
+				Source:   record[3],
+			}
 		}
 	}
 
@@ -182,23 +212,30 @@ func runScan(targetDir string) {
 		isRoot := path == targetDir || path == "."
 
 		matchedSlug, isBanned := matchSlug(name, d.IsDir(), bannedPlugins)
-
 		isValidLocation := parentName == "plugins" || parentName == "mu-plugins" || isRoot
 
 		if isBanned && isValidLocation {
-			source := bannedPlugins[matchedSlug]
-			fmt.Printf(msg("detected"), SymDetect, Red, Reset, Bold, path, Reset)
-			fmt.Printf(msg("slug"), SymBranch, Yellow, matchedSlug, Reset)
-			fmt.Printf(msg("source"), SymEnd, Cyan, source, Reset)
-			foundCount++
+			pluginData := bannedPlugins[matchedSlug]
 
+			// Filters implementation
+			if matchesFilter(pluginData.Category, categories) && matchesFilter(pluginData.Source, sources) {
+				fmt.Printf(msg("detected"), SymDetect, Red, Reset, Bold, path, Reset)
+				fmt.Printf(msg("slug"), SymBranch, Yellow, matchedSlug, Reset)
+
+				if pluginData.Category != "" {
+					fmt.Printf(msg("category"), SymBranch, Magenta, pluginData.Category, Reset)
+				}
+
+				fmt.Printf(msg("source"), SymEnd, Cyan, pluginData.Source, Reset)
+				foundCount++
+			}
+
+			// We bypass diving deeper securely for ALL registered plugin definitions
 			if d.IsDir() && !isRoot {
 				return filepath.SkipDir
 			}
 		} else {
 			// Submodules false-positives prevention logic
-			// Jeśli katalog wp-content/plugins/<plugin> nie jest zbanowany, to
-			// i tak przestajemy szukać w nim zbanowanych nazw.
 			if d.IsDir() && !isRoot && isValidLocation {
 				return filepath.SkipDir
 			}
@@ -212,19 +249,26 @@ func runScan(targetDir string) {
 		os.Exit(1)
 	}
 
+	filterContext := ""
+	if len(categories) > 0 || len(sources) > 0 {
+		filterContext = " (with applied filter restrictions)"
+	}
+
 	if foundCount > 0 {
-		fmt.Printf(msg("found"), SymDetect, Red, foundCount, Reset)
+		fmt.Printf(msg("found"), SymDetect, Red, foundCount, Reset, filterContext)
 		os.Exit(1)
 	} else {
-		fmt.Printf(msg("not_found"), SymCheck)
+		fmt.Printf(msg("not_found"), SymCheck, filterContext)
 	}
 }
 
-func matchSlug(name string, isDir bool, banned map[string]string) (string, bool) {
+func matchSlug(name string, isDir bool, banned map[string]PluginData) (string, bool) {
+	// 1. Sprawdzanie dokładnej nazwy
 	if _, ok := banned[name]; ok {
 		return name, true
 	}
 
+	// 2. Jeśli to plik, sprawdzamy po odcięciu rozszerzeń .php, .zip, .tar.gz
 	if !isDir {
 		if strings.HasSuffix(name, ".php") {
 			slug := strings.TrimSuffix(name, ".php")

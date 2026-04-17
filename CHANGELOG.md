@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- `--category` (`-c`) and `--source` (`-s`) advanced array flags, granting the exact capability to perform strict filtering operations directly upon the internal CSV attributes. For example, explicitly searching for items belonging to "User list" vs "Kinsta" sources, or segregating plugins under the "Security" and "Caching" metadata categories using partial strings strings.
 - `--exclude` (`-e`) flag to selectively omit specific directories from the filesystem scan (e.g., skips traversing `dev.hide`, `node_modules` caches or specific backup repositories). 
 - Massively expanded the bundled blacklist `cv-banned.csv` containing over 40 new entries based on security scans and official hosting matrices from **WordPress.com VIP** strict guidelines (e.g., Cache Enabler, Object Cache Pro, specific Reset tools, file managers, scraper plugins, and heavy trackers).
 
