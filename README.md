@@ -33,7 +33,7 @@ make brew
 ```
 
 ### Build from Source
-Ensure you have **Go 1.21+** installed on your system.
+Ensure you have **Go 1.26+** installed on your system.
 ```bash
 git clone https://github.com/spagu/go-wpvul.git
 cd go-wpvul
