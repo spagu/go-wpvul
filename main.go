@@ -62,7 +62,16 @@ func msg(key string) string {
 	return key
 }
 
+const Version = "1.0.0"
+
 func main() {
+	if len(os.Args) >= 2 {
+		if os.Args[1] == "--version" || os.Args[1] == "-v" {
+			fmt.Printf("wpvul version %s\n", Version)
+			os.Exit(0)
+		}
+	}
+
 	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, msg("usage"), filepath.Base(os.Args[0]))
 		os.Exit(1)
