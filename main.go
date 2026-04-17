@@ -173,7 +173,9 @@ func runScan(targetDir string) {
 
 		matchedSlug, isBanned := matchSlug(name, d.IsDir(), bannedPlugins)
 
-		if isBanned {
+		isValidLocation := parentName == "plugins" || parentName == "mu-plugins" || isRoot
+
+		if isBanned && isValidLocation {
 			source := bannedPlugins[matchedSlug]
 			fmt.Printf(msg("detected"), SymDetect, Red, Reset, Bold, path, Reset)
 			fmt.Printf(msg("slug"), SymBranch, Yellow, matchedSlug, Reset)
@@ -185,7 +187,9 @@ func runScan(targetDir string) {
 			}
 		} else {
 			// Submodules false-positives prevention logic
-			if d.IsDir() && !isRoot && (parentName == "plugins" || parentName == "mu-plugins") {
+			// Jeśli katalog wp-content/plugins/<plugin> nie jest zbanowany, to
+			// i tak przestajemy szukać w nim zbanowanych nazw.
+			if d.IsDir() && !isRoot && isValidLocation {
 				return filepath.SkipDir
 			}
 		}
