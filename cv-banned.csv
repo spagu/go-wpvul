@@ -202,3 +202,46 @@ litespeed-cache,LiteSpeed Cache,Caching,Kinsta
 jch-optimize,JCH Optimize,Performance,Kinsta
 aam,Advanced Access Manager,Security,Kinsta
 all-in-one-wp-migration,All-in-One WP Migration,Backups,Pantheon
+breeze,Breeze Cache,Caching,WordPress.com
+comet-cache,Comet Cache,Caching,WordPress.com
+cache-enabler,Cache Enabler,Caching,WordPress.com
+object-cache-pro,Object Cache Pro,Caching,WordPress.com
+powered-cache,Powered Cache,Caching,WordPress.com
+redis-cache,Redis Object Cache,Caching,WordPress.com
+wp-speed-of-light,WP Speed Of Light,Caching,WordPress.com
+wp-scss,WP-SCSS,Performance,WordPress.com
+siteground-migrator,SiteGround Migrator,Backups,WordPress.com
+wp-backitup,WP BackItUp Community Edition,Backups,WordPress.com
+awp-classifieds,AWP Classifieds,Performance,WordPress.com
+post-views-counter,Post Views Counter,Stats,WordPress.com
+top-10,Top 10,Performance,WordPress.com
+userpro,UserPro,Performance,WordPress.com
+wp-session-manager,WP Session Manager,Performance,WordPress.com
+factory-reset,Factory Reset,Duplicate Functionality,WordPress.com
+wp-file-manager,File Manager,Security,WordPress.com
+hide-my-wp,Hide My WP,Security,WordPress.com
+plugins-garbage-collector,Plugins Garbage Collector,Performance,WordPress.com
+ultimate-wordpress-reset,Ultimate WordPress Reset,Duplicate Functionality,WordPress.com
+wp-downgrade,WP Downgrade,Duplicate Functionality,WordPress.com
+wp-uninstaller,WP Uninstaller by Azed,Duplicate Functionality,WordPress.com
+wpmu-database-reset,WPMU Database Reset,Duplicate Functionality,WordPress.com
+mailit,Mailit,Security,WordPress.com
+send-email-from-admin,Send Email from Admin,Security,WordPress.com
+octolooks-scrapes,Octolooks Scrapes,Performance,WordPress.com
+rss-feed-to-post,RSS Feed to Post,Performance,WordPress.com
+woozone,Woozone/WZone,Performance,WordPress.com
+wordai,WordAi Aggregator,Performance,WordPress.com
+wp-auto-pro,WP Auto Pro,Performance,WordPress.com
+wp-rss-aggregator,WP RSS Aggregator,Performance,WordPress.com
+wpematico,WPeMatico RSS Feed Fetcher,Performance,WordPress.com
+wp-robot,WP Robot,Performance,WordPress.com
+stopbadbots,Stop Bad Bots,Security,WordPress.com
+antihacker,Anti Hacker Scan,Security,WordPress.com
+really-simple-ssl,Really Simple Security,Security,"WordPress.com; Kinsta"
+wp-simple-firewall,Shield Security,Security,WordPress.com
+wp-hide-security-enhancer,WP Hide & Security Enhancer,Security,WordPress.com
+zapp-proxy,Zapp Proxy Server Plugin,Security,WordPress.com
+yuzo-related-post,Yuzo Related Post,Related Posts,WordPress.com
+wps-hide-login,WPS Hide Login,Security,WordPress.com
+wp-optimizer,WP Optimizer,Duplicate Functionality,WordPress.com
+plugin-detective,Plugin Detective,Security,WordPress.com
