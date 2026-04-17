@@ -43,6 +43,16 @@ make compile-all
 ```
 Your compiled binaries for different platforms will be waiting for you inside the `./build/` directory!
 
+### Updating / Upgrading
+If you already have `wpvul` installed on your system, you can pull the latest release containing the most up-to-date blacklist seamlessly. The installer runs in-place, safely bumping up your tool to the newest version published on GitHub Actions:
+```bash
+curl -sSL https://raw.githubusercontent.com/spagu/go-wpvul/main/install.sh | bash
+```
+Afterward, you can verify your build by typing:
+```bash
+wpvul --version
+```
+
 ---
 
 ## 🚀 Usage
